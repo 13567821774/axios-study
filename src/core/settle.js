@@ -3,11 +3,11 @@
 var createError = require('./createError');
 
 /**
- * Resolve or reject a Promise based on response status.
+ * 通过status判断promise回调时失败还是成功.
  *
- * @param {Function} resolve A function that resolves the promise.
- * @param {Function} reject A function that rejects the promise.
- * @param {object} response The response.
+ * @param {Function} resolve 期约resolve回调.
+ * @param {Function} reject 期约拒绝回调.
+ * @param {object} response 需要处理返回的数据.
  */
 module.exports = function settle(resolve, reject, response) {
   var validateStatus = response.config.validateStatus;

@@ -13,8 +13,11 @@ var combineURLs = require('../helpers/combineURLs');
  * @returns {string} The combined full path
  */
 module.exports = function buildFullPath(baseURL, requestedURL) {
+  // 判断是否requestedURL为一个http：//开始的值
   if (baseURL && !isAbsoluteURL(requestedURL)) {
+    // 不是根路径
     return combineURLs(baseURL, requestedURL);
   }
+  // 根路径 替换baseurl发送requestedURL
   return requestedURL;
 };

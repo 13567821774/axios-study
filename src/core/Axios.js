@@ -24,7 +24,7 @@ function Axios(instanceConfig) {
 /**
  * 将request挂载到原型上
  *
- * @param {Object} config The config specific for this request (merged with this.defaults)
+ * @param {Object} config 传入一个配置项,用来合并默认配置
  */
 Axios.prototype.request = function request(config) {
   /*eslint no-param-reassign:0*/
@@ -43,7 +43,7 @@ Axios.prototype.request = function request(config) {
 
   // 设置请求方法
   if (config.method) {
-    // 如果传入的配置里有methos优先
+    // 如果传入的配置里有methods优先
     config.method = config.method.toLowerCase();
   } else if (this.defaults.method) {
     // 默认配置第二
@@ -68,7 +68,7 @@ Axios.prototype.request = function request(config) {
   }
 
   // filter out skipped interceptors
-  // 创建一个空的请求拦截器数组
+  // 创建一个空的数组来存放请求拦截器数组
   var requestInterceptorChain = [];
   var synchronousRequestInterceptors = true;
   this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
@@ -90,25 +90,26 @@ Axios.prototype.request = function request(config) {
     // 将handler的fulfilled和rejected拿出来 放在头部
     requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
   });
-  // 和请求拦截器差不多
+  // 和请求拦截器差不多,只不过是从尾部加入拦截器
   var responseInterceptorChain = [];
   this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
     responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
   });
-
+  // 创建一个变量来存储当前promise状态
   var promise;
-  // 如果为false
+  // 如果请求拦截器传入的options里synchronous为false 或者不存在
   if (!synchronousRequestInterceptors) {
     var chain = [dispatchRequest, undefined];
-    // 给chain头部追加请求拦截器,并且执行
+    // 给chain头部追加请求拦截器
     // requestInterceptorChain = [fulfilled,reject,fulfilled,reject,fulfilled,reject,fulfilled,reject,....]
     Array.prototype.unshift.apply(chain, requestInterceptorChain);
     // 合并响应拦截器
     chain.concat(responseInterceptorChain);
-
+    // 存储当前config作为then的回调函数
     promise = Promise.resolve(config);
+    // 循环chain 直到chain为空跳出循环
     while (chain.length) {
-      // 将第一个值和第二个值删除
+      // 将第一个值和第二个值删除，并执行
       promise = promise.then(chain.shift(), chain.shift());
     }
 
@@ -141,14 +142,16 @@ Axios.prototype.request = function request(config) {
 };
 
 Axios.prototype.getUri = function getUri(config) {
+  // 合并配置
   config = mergeConfig(this.defaults, config);
+  // 将地址中带？ 全部替换成''
   return buildURL(config.url, config.params, config.paramsSerializer).replace(/^\?/, '');
 };
 
-// Provide aliases for supported request methods
+// 给axios原型上注册['delete', 'get', 'head', 'options'],实现axios.get可调用
 utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
-  /*eslint func-names:0*/
   Axios.prototype[method] = function (url, config) {
+    // 其实axios.get类似 最终调用request方法,将method作为参数传入
     return this.request(
       mergeConfig(config || {}, {
         method: method,
@@ -158,9 +161,8 @@ utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData
     );
   };
 });
-
+// 给axios原型上注册['post', 'put', 'patch'],实现axios.post可调用
 utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  /*eslint func-names:0*/
   Axios.prototype[method] = function (url, data, config) {
     return this.request(
       mergeConfig(config || {}, {

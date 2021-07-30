@@ -23,7 +23,6 @@ function createInstance(defaultConfig) {
 
   // 将Axios实例化后的属性合并至instance
   utils.extend(instance, context);
-  console.log(instance, 123);
   // 返回一个instance
   return instance;
 }
@@ -36,9 +35,9 @@ axios.Axios = Axios;
 
 // 创建一个create属性方法来创建新的实例
 axios.create = function create(instanceConfig) {
+  // 传入的实例配置 会和当前默认配置合并
   return createInstance(mergeConfig(axios.defaults, instanceConfig));
 };
-
 // Expose Cancel & CancelToken
 axios.Cancel = require('./cancel/Cancel');
 axios.CancelToken = require('./cancel/CancelToken');
